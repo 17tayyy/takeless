@@ -1,9 +1,22 @@
-<p align="center">
-  <b>takeless</b>
-</p>
+<h1 align="center">takeless</h1>
 
 <p align="center">
   <i>The mechanical half of a FastAPI service — installed, not copy-pasted.</i>
+</p>
+
+<p align="center">
+  <a href="https://pypi.org/project/takeless/"><img alt="PyPI version" src="https://img.shields.io/pypi/v/takeless.svg"></a>
+  <a href="https://pypi.org/project/takeless/"><img alt="Python versions" src="https://img.shields.io/pypi/pyversions/takeless.svg"></a>
+  <a href="https://github.com/17tayyy/takeless/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/17tayyy/takeless/actions/workflows/ci.yml/badge.svg"></a>
+  <a href="https://github.com/17tayyy/takeless/blob/main/LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg"></a>
+</p>
+
+<p align="center">
+  <a href="#install">Install</a> &nbsp;•&nbsp;
+  <a href="#the-two-paths">The two paths</a> &nbsp;•&nbsp;
+  <a href="#modules">Modules</a> &nbsp;•&nbsp;
+  <a href="examples/service.py">Example service</a> &nbsp;•&nbsp;
+  <a href="CONTRIBUTING.md">Contributing</a>
 </p>
 
 ---
