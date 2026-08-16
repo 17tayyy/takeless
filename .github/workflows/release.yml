@@ -28,12 +28,14 @@ jobs:
           echo "releasing ${packaged}"
 
       - name: Test before publishing
+        # `--no-sync`, as in CI: a bare `uv run` would re-sync without the
+        # extras and leave the type checker with nothing to resolve against.
         run: |
           uv sync --all-extras
-          uv run ruff check .
-          uv run ruff format --check .
-          uv run ty check src/
-          uv run pytest -q
+          uv run --no-sync ruff check .
+          uv run --no-sync ruff format --check .
+          uv run --no-sync ty check src/
+          uv run --no-sync pytest -q
 
       - name: Build sdist and wheel
         run: uv build

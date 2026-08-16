@@ -17,6 +17,11 @@ jobs:
       matrix:
         python-version: ["3.12", "3.13"]
 
+    env:
+      # Beats the `.python-version` file, which would otherwise pin every
+      # matrix entry to the same interpreter.
+      UV_PYTHON: ${{ matrix.python-version }}
+
     steps:
       - uses: actions/checkout@v4
 
@@ -25,18 +30,21 @@ jobs:
           enable-cache: true
 
       - name: Install
-        run: uv sync --all-extras --python ${{ matrix.python-version }}
+        run: uv sync --all-extras
 
+      # `--no-sync` on every step below: a bare `uv run` re-syncs to the
+      # default dependency set, which uninstalls the extras just installed and
+      # leaves the type checker unable to resolve sqlalchemy or ardiq.
       - name: Lint
         run: |
-          uv run ruff check .
-          uv run ruff format --check .
+          uv run --no-sync ruff check .
+          uv run --no-sync ruff format --check .
 
       - name: Type check
-        run: uv run ty check src/
+        run: uv run --no-sync ty check src/
 
       - name: Test
-        run: uv run pytest -q
+        run: uv run --no-sync pytest -q
 
   core-only:
     # The headline claim is that `pip install takeless` needs none of the
