@@ -4,13 +4,13 @@ version = "0.1.0"
 description = "The mechanical half of a FastAPI service — auth, jobs, logging, rate limiting, DB, settings, health, errors and docs — as a dependency, not a template."
 readme = "README.md"
 requires-python = ">=3.12"
-license = { file = "LICENSE" }
+license = "MIT"
+license-files = ["LICENSE"]
 authors = [{ name = "17tayyy", email = "oscarfdst@proton.me" }]
 keywords = ["fastapi", "asgi", "auth", "jwt", "structlog", "rate-limit", "settings"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Framework :: FastAPI",
