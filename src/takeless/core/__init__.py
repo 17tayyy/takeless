@@ -8,7 +8,13 @@ must work on a bare `pip install takeless`.
 from __future__ import annotations
 
 from takeless.core.app import Takeless
-from takeless.core.component import Check, Component, get_component, register
+from takeless.core.component import (
+    Check,
+    Component,
+    bind_lifecycle,
+    get_component,
+    register,
+)
 from takeless.core.deps import MissingDependencyError, require_dependency
 
 __all__ = [
@@ -16,6 +22,7 @@ __all__ = [
     "Component",
     "MissingDependencyError",
     "Takeless",
+    "bind_lifecycle",
     "get_component",
     "register",
     "require_dependency",

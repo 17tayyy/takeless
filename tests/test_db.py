@@ -80,6 +80,29 @@ def test_database_shows_up_in_health_without_being_listed():
     assert body["checks"]["db"]["dialect"] == "sqlite"
 
 
+def test_setting_up_alone_still_closes_the_engine_on_shutdown():
+    """The modular path has to manage its own lifecycle. Without this, a
+    `Database(...).setup(app)` with no `Takeless` anywhere leaks its pool — and
+    aiosqlite's thread then outlives the loop and raises from nowhere."""
+    app = FastAPI()
+    database = Database(DatabaseConfig(url=URL))
+    database.setup(app)
+
+    disposed = False
+    original = database.shutdown
+
+    async def record():
+        nonlocal disposed
+        disposed = True
+        await original()
+
+    database.shutdown = record
+
+    with TestClient(app):
+        assert not disposed
+    assert disposed
+
+
 def test_the_lifespan_disposes_the_engine():
     from takeless import Takeless
 

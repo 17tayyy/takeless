@@ -15,10 +15,13 @@ process-wide global — two apps in one process stay independent.
 
 from __future__ import annotations
 
+from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar
 
 if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
+
     from fastapi import FastAPI
 
 _STATE_KEY = "takeless_components"
@@ -49,9 +52,11 @@ class Component:
         """Hook into `app`: middleware, routes, exception handlers, state.
 
         Subclasses must call `super().setup(app)` so the component stays
-        reachable from request-scoped dependencies.
+        reachable from request-scoped dependencies and its lifecycle runs.
         """
         register(app, self)
+        if getattr(app.state, "takeless", None) is None:
+            bind_lifecycle(app, self)
 
     async def startup(self) -> None:
         """Open connections. Runs inside the app's lifespan, before serving."""
@@ -62,6 +67,27 @@ class Component:
     async def check(self) -> Check | None:
         """Probe the backing service. `None` means "nothing to probe here"."""
         return None
+
+
+def bind_lifecycle(app: FastAPI, component: Component) -> None:
+    """Run `component`'s startup and shutdown with the app's lifespan.
+
+    Wraps the existing lifespan rather than replacing it, so several components
+    can each bind their own and a user-supplied `lifespan=` still runs — theirs
+    innermost, with connections already open.
+    """
+    previous = app.router.lifespan_context
+
+    @asynccontextmanager
+    async def lifespan(app: FastAPI) -> AsyncIterator[Any]:
+        await component.startup()
+        try:
+            async with previous(app) as state:
+                yield state
+        finally:
+            await component.shutdown()
+
+    app.router.lifespan_context = lifespan
 
 
 def register(app: FastAPI, component: Component) -> None:
