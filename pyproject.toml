@@ -1,0 +1,103 @@
+[project]
+name = "takeless"
+version = "0.1.0"
+description = "The mechanical half of a FastAPI service — auth, jobs, logging, rate limiting, DB, settings, health, errors and docs — as a dependency, not a template."
+readme = "README.md"
+requires-python = ">=3.12"
+license = { file = "LICENSE" }
+authors = [{ name = "17tayyy", email = "oscarfdst@proton.me" }]
+keywords = ["fastapi", "asgi", "auth", "jwt", "structlog", "rate-limit", "settings"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Framework :: FastAPI",
+    "Framework :: AsyncIO",
+    "Typing :: Typed",
+]
+dependencies = [
+    "fastapi>=0.115",
+    "pydantic>=2.9",
+    "pydantic-settings>=2.6",
+    "structlog>=24.4",
+]
+
+[project.optional-dependencies]
+auth = ["pyjwt>=2.10", "argon2-cffi>=23.1"]
+jobs = ["ardiq>=1.0"]
+db = ["sqlalchemy[asyncio]>=2.0"]
+redis = ["redis>=5.2"]
+aws = ["boto3>=1.35"]
+all = [
+    "takeless[auth]",
+    "takeless[jobs]",
+    "takeless[db]",
+    "takeless[redis]",
+    "takeless[aws]",
+]
+
+[project.urls]
+Repository = "https://github.com/17tayyy/takeless"
+Issues = "https://github.com/17tayyy/takeless/issues"
+Changelog = "https://github.com/17tayyy/takeless/releases"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/takeless"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "SIM", # flake8-simplify
+    "RUF", # ruff-specific
+]
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+# `= Depends(...)` in a default is FastAPI's own idiom, not a mutable default.
+"tests/*" = ["B008"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.ty.environment]
+python-version = "3.12"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
+filterwarnings = [
+    "error",
+    # A connection that fails to open is never handed to SQLAlchemy, so aiosqlite
+    # leaves it to the garbage collector. Nothing here can close it earlier, and
+    # the collection lands on whichever test happens to trigger a GC.
+    "ignore:.*was deleted before being closed.*:ResourceWarning",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.24.0",
+    "httpx2>=0.1.0",
+    "aiosqlite>=0.20.0",
+    "ruff>=0.15.15",
+    "ty>=0.0.40",
+]

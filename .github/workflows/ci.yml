@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.13"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install
+        run: uv sync --all-extras --python ${{ matrix.python-version }}
+
+      - name: Lint
+        run: |
+          uv run ruff check .
+          uv run ruff format --check .
+
+      - name: Type check
+        run: uv run ty check src/
+
+      - name: Test
+        run: uv run pytest -q
+
+  core-only:
+    # The headline claim is that `pip install takeless` needs none of the
+    # backends. Asserting it here keeps an accidental top-level import of jwt
+    # or sqlalchemy from shipping.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+
+      - name: Install without extras
+        run: |
+          uv venv
+          uv pip install .
+
+      - name: Import and set up with no backends installed
+        run: |
+          uv run --no-sync python -c "
+          import importlib.util
+          for dep in ['jwt', 'argon2', 'ardiq', 'sqlalchemy', 'redis', 'boto3']:
+              assert importlib.util.find_spec(dep) is None, dep + ' leaked into the core install'
+
+          from fastapi import FastAPI
+          from takeless import Takeless
+          Takeless().setup(FastAPI())
+
+          for module, extra in [('takeless.auth', 'auth'), ('takeless.jobs', 'jobs'), ('takeless.db', 'db')]:
+              try:
+                  __import__(module)
+              except ImportError as exc:
+                  assert \"takeless[\" + extra + \"]\" in str(exc), str(exc)
+              else:
+                  raise AssertionError(module + ' imported without its extra')
+          print('core-only install verified')
+          "
